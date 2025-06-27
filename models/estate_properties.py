@@ -9,7 +9,7 @@ class EstateProperties(models.Model):
     name = fields.Char(required=True)
     description = fields.Text()
     postcode = fields.Char()
-    date_availability = fields.Date(default=date.today()+timedelta(days=90), copy=False)
+    availability_from = fields.Date(default=date.today()+timedelta(days=90), copy=False)
     expected_price = fields.Float(required=True)
     selling_price = fields.Float(readonly=True, copy=False)
     bedrooms = fields.Integer(default=2)
