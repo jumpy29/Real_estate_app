@@ -1,5 +1,7 @@
 from odoo import api, models, fields
+from odoo.exceptions import UserError, ValidationError
 from datetime import date, timedelta
+from odoo.tools.float_utils import float_compare, float_is_zero
 
 class EstateProperties(models.Model):
     _name = 'estate.properties'  #name of table
@@ -29,7 +31,8 @@ class EstateProperties(models.Model):
     ], 
     required=True, 
     copy=False,
-    default='new'
+    default='new',
+    readonly=True
     )
     property_type_id = fields.Many2one('estate.property.type', string='Property Type')
     salesperson_id = fields.Many2one('res.users', string='Salesperson', default=lambda self: self.env.user)
@@ -39,6 +42,25 @@ class EstateProperties(models.Model):
     total_area = fields.Integer(string='Total Area (sqm)', compute='_compute_total_area')
     best_price = fields.Float(string='Best Offer', compute='_compute_best_price')
     
+
+    _sql_constraints = [
+        ('check_expected_price', 'CHECK(expected_price>0)', 'Expected prices must be greater than 0'),
+        ('check_selling_price', 'CHECK(selling_price>0)', "Selling price must be greater than 0"),
+        ('unique_name', 'UNIQUE(name)', "Property name already exists")
+    ]
+
+
+    # Python Constrains
+
+    @api.constrains('selling_price', 'expected_price')
+    def _check_selling_price(self):
+        for record in self:
+            if record.selling_price and record.selling_price<0.9*record.expected_price:
+                raise ValidationError("Selling price cannot be lower than 90% of the expected price")
+
+
+
+    # Computed fields
 
     @api.depends('living_area', 'garden_area')
     def _compute_total_area(self):
@@ -50,8 +72,40 @@ class EstateProperties(models.Model):
         for record in self:
             prices = record.offer_ids.mapped('price')
             record.best_price = max(prices) if prices else 0
+
+    
+
+    # Onchange fields
                 
     @api.onchange("garden")
     def _onchange_garden(self):
         self.garden_area = 10 if self.garden else 0
         self.garden_orientation = 'north' if self.garden else False
+
+
+    # Property actions
+
+    def set_property_sold(self):
+        if self.state == 'cancelled':
+            raise UserError("Cancelled properties cannot be sold.")
+        
+        for record in self:
+            accepted_offer = record.offer_ids.filtered(lambda o : o.status=='accepted')
+            if not accepted_offer:
+                raise UserError("Property cannot be sold if no offer is accepted.")
+
+        self.state = 'sold'
+        return True
+    
+    def set_property_cancel(self):
+        if self.state == 'sold':
+            raise UserError("Sold properties cannot be cancelled.")
+        
+        for record in self:
+            accepted_offer = record.offer_ids.filtered(lambda o : o.status=='accepted')
+            if accepted_offer:
+                raise UserError("Property cannot be sold when an offer is already accepted")
+
+        self.state = 'cancelled'
+        return True
+    
