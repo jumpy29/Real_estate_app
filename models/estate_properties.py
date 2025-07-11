@@ -6,6 +6,7 @@ from odoo.tools.float_utils import float_compare, float_is_zero
 class EstateProperties(models.Model):
     _name = 'estate.properties'  #name of table
     _description = 'Real estate app'
+    _order = "id desc"
 
     #table fields
     name = fields.Char(required=True)
@@ -48,6 +49,7 @@ class EstateProperties(models.Model):
         ('check_selling_price', 'CHECK(selling_price>0)', "Selling price must be greater than 0"),
         ('unique_name', 'UNIQUE(name)', "Property name already exists")
     ]
+
 
 
     # Python Constrains

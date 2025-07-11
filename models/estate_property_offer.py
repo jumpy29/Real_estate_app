@@ -5,12 +5,13 @@ from datetime import timedelta, date
 class EstatePropertyOffer(models.Model):
     _name = "estate.property.offer"
     _description = 'Real estate property offer'
+    _order = 'price desc'
 
     price = fields.Float(required=True)
     status = fields.Selection([('accepted', 'Accepted'), ('refused', 'Refused')], copy=False, readonly=True)
     partner_id = fields.Many2one('res.partner', required=True, string='Buyer')
     property_id = fields.Many2one('estate.properties', required=True, string='Property')
-    
+    property_type_id = fields.Many2one(related='property_id.property_type_id', store=True)
     validity = fields.Integer(string='Validity (days)', default=7)
     date_deadline = fields.Date(string='Deadline', compute='_compute_date_deadline', inverse='_inverse_date_deadline', store=True)
 
@@ -19,6 +20,16 @@ class EstatePropertyOffer(models.Model):
         ('check_price', 'CHECK(price>0)', 'Offer price must be greater than 0')
     ]
 
+
+    # Overwrite create function to change state of property
+    def create(self, vals_list):
+        offer = super().create(vals_list)
+
+        if offer.property_id.state == 'new':
+            offer.property_id.state = 'offer_received'
+        
+        return offer
+    
 
     #Computed Fields
 
@@ -66,3 +77,5 @@ class EstatePropertyOffer(models.Model):
         self.status = 'refused'
 
         return True
+    
+    
