@@ -113,6 +113,7 @@
         </field>
     </record>
 
+
     <record id='estate_property_search_view' model='ir.ui.view'>
         <field name='name'>estate.property.search</field>
         <field name='model'>estate.properties</field>
@@ -140,4 +141,24 @@
             </search>
         </field>
     </record>
+
+    <record id='user_properties_form_view' model='ir.ui.view'>
+        <field name='name'>res.user.form.inherit.estate</field>
+        <field name='model'>res.users</field>
+        <field name='inherit_id' ref='base.view_users_form'/>
+        <field name='arch' type='xml'>
+            <xpath expr="//notebook" position='inside'>
+                <page string="Available Properties">
+                    <field name="property_ids">
+                        <list>
+                            <field name='name'/>
+                            <field name='state'/>
+                            <field name='expected_price'/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
 </odoo>

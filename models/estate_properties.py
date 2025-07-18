@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from odoo.tools.float_utils import float_compare, float_is_zero
 
 class EstateProperties(models.Model):
-    _name = 'estate.properties'  #name of table
+    _name = 'estate.properties'  
     _description = 'Real estate app'
     _order = "id desc"
 
@@ -111,3 +111,11 @@ class EstateProperties(models.Model):
         self.state = 'cancelled'
         return True
     
+
+    # CRUD logicv
+
+    @api.ondelete(at_uninstall=False)
+    def _check_property_before_delete(self):
+        for record in self:
+            if record.state not in ['cancelled', 'new']:
+                raise ValidationError("Only 'new' or 'cancelled' properties can be deleted.")
