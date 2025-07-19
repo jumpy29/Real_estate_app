@@ -1,3 +1,8 @@
+
+
+
+https://github.com/user-attachments/assets/cf620b4d-c85e-4243-8ebb-2aaf5a00d7a0
+
 # 🏡 Estate Management - Odoo 18
 
 An Odoo 18 module to manage real estate properties, categorize them, and handle property offers with built-in workflows.
